@@ -5,37 +5,33 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
-
+#okay asdasasd
 # Cargar el dataset FER-2013
 data = pd.read_csv('fer2013.csv')
 
-# Procesamiento de datos
-def preprocess(data):
-    pixels = data['pixels'].tolist()
-    images = np.array([np.fromstring(pix, sep=' ') for pix in pixels], dtype='float32')
-    images = images.reshape((-1, 48, 48, 1)) / 255.0  # Normalizamos
-    labels = to_categorical(data['emotion'], num_classes=7)
-    return images, labels
-
-X, y = preprocess(data)
-
-# Emociones del dataset (puedes reducirlo a 5)
+# Emociones del dataset (estándar de FER-2013, 7 clases)
 emotion_labels = {
     0: "Enojado",
-    1: "Disgusto",     # podrías omitir esta
+    1: "Disgusto",
     2: "Miedo",
     3: "Feliz",
     4: "Triste",
     5: "Sorpresa",
     6: "Neutral"
 }
+num_classes = len(emotion_labels) # Esto será 7
 
-# Si deseas solo 5 emociones, filtra así:
-selected_classes = [0, 2, 3, 4, 6]  # Enojado, Miedo, Feliz, Triste, Neutral
-idx = [i for i, label in enumerate(np.argmax(y, axis=1)) if label in selected_classes]
-X = X[idx]
-y = y[idx]
-y = to_categorical(np.argmax(y, axis=1), num_classes=len(selected_classes))
+# Procesamiento de datos
+def preprocess(data):
+    pixels = data['pixels'].tolist()
+    images = np.array([np.fromstring(pix, sep=' ') for pix in pixels], dtype='float32')
+    images = images.reshape((-1, 48, 48, 1)) / 255.0  # Normalizamos
+    # Aquí es donde se aplican las 7 clases inicialmente, sin filtrar
+    labels = to_categorical(data['emotion'], num_classes=num_classes)
+    return images, labels
+
+X, y = preprocess(data)
+
 
 # Dividir en entrenamiento y prueba
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -49,7 +45,7 @@ model = Sequential([
     Flatten(),
     Dense(128, activation='relu'),
     Dropout(0.5),
-    Dense(len(selected_classes), activation='softmax')
+    Dense(num_classes, activation='softmax') # Asegúrate de que esto sea 'num_classes' (7)
 ])
 
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
